@@ -20,9 +20,12 @@ import java.util.List;
 public class ScanService {
     private final UserRepository userRepository;
     private final ScanRepository scanRepository;
-
+    private final ValidationService validationService;
 
     public ScanResponse createScan(ScanRequest request, Authentication authentication){
+
+        validationService.validate(request.getInputType(),request.getContent());
+
         User user = userRepository.findByEmail(authentication.getName())
                     .orElseThrow();
         Scan scan = Scan.builder()
