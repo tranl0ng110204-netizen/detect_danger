@@ -1,0 +1,80 @@
+package com.example.detectdanger.service;
+
+import com.example.detectdanger.dto.auth.LoginRequest;
+import com.example.detectdanger.dto.auth.LoginResponse;
+import com.example.detectdanger.dto.auth.RegisterRequest;
+import com.example.detectdanger.entity.Role;
+import com.example.detectdanger.entity.User;
+import com.example.detectdanger.repository.UserRepository;
+import com.example.detectdanger.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+
+    //dang ki user
+    public void register(RegisterRequest request){
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new IllegalArgumentException(
+                    "Email already exists"
+            );
+        }
+        if(userRepository.existsByUsername(request.getUserName())){
+            throw new IllegalArgumentException(
+                    "User already exists"
+            );
+        }
+        User user = User.builder()
+                .username(request.getUserName())
+                .email(request.getEmail())
+                .passwordHash(
+                        passwordEncoder.encode(request.getPassword())
+                )
+                .role(Role.USER)
+                .build();
+        userRepository.save(user);
+    }
+
+    //dang nhap user
+    public LoginResponse login(LoginRequest request){
+
+        //tao token
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+
+        var userDetails = userRepository.findByEmail(request.getEmail())
+                .orElseThrow();
+
+
+        var springUser =
+                org.springframework.security.core.userdetails.User
+                        .withUsername(userDetails.getEmail())
+                        .password(userDetails.getPasswordHash())
+                        .roles(userDetails.getRole().name())
+                        .build();
+
+        String token =
+                jwtService.generateToken(springUser);
+
+        return new LoginResponse(
+                token,
+                "Bearer"
+        );
+    }
+
+}
