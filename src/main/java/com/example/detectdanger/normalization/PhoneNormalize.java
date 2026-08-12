@@ -10,6 +10,7 @@ public class PhoneNormalize implements InputNormalizer{
         return inputType == InputType.PHONE;
     }
 
+
     @Override
     public String normalize(String input){
         return input.trim()
