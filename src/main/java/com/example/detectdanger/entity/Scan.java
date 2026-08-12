@@ -26,6 +26,9 @@ public class Scan {
     private InputType inputType;
 
     @Column(nullable = false)
+    private String content;
+
+    @Column(nullable = false)
     private Integer riskScore;
 
     @Enumerated(EnumType.STRING)

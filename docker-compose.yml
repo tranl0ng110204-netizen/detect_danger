@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # ======== PostgreSQL Database ========
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: detectdanger_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}       # Lấy từ file .env
+      POSTGRES_DB: ${DB_NAME}                 # Lấy từ file .env
+    ports:
+      - "5433:5432"   # Map cổng 5433 trên host -> 5432 trong container (để tránh xung đột nếu bạn đã có Postgres local)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # Giữ dữ liệu khi container bị xóa
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ======== Backend Spring Boot ========
+  app:
+    build: .
+    container_name: detectdanger_app
+    ports:
+      - "7000:7000"   # Map cổng host 7000 vào container 7000
+    environment:
+      # Các biến môi trường cho Spring Boot (khớp với ${...} trong application.properties)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: 7000
+      # SPRING_JPA_SHOW_SQL: true   # có thể bật nếu muốn
+    depends_on:
+      postgres-db:
+        condition: service_healthy   # Chỉ khởi động app khi DB sẵn sàng
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

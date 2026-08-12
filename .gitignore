@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Environment variables (chứa mật khẩu)
+.env
+
+# File cấu hình local (nếu có)
+application-local.properties
