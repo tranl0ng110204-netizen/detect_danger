@@ -1,0 +1,9 @@
+package com.example.detectdanger.normalization;
+
+import com.example.detectdanger.entity.InputType;
+
+public interface InputNormalizer {
+    boolean supports(InputType inputType);
+    String normalize(String input);
+
+}

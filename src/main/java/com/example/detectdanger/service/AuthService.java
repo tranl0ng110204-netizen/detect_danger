@@ -56,7 +56,6 @@ public class AuthService {
                 )
         );
 
-
         var userDetails = userRepository.findByEmail(request.getEmail())
                 .orElseThrow();
 

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ScanResponse {
     private Long scanId;
     private InputType inputType;
+    private String content;
     private Integer riskScore;
     private RiskLevel riskLevel;
     private LocalDateTime createdAt;
