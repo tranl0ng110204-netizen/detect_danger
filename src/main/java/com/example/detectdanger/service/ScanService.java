@@ -7,6 +7,9 @@ import com.example.detectdanger.entity.Scan;
 import com.example.detectdanger.entity.User;
 import com.example.detectdanger.repository.ScanRepository;
 import com.example.detectdanger.repository.UserRepository;
+import com.example.detectdanger.rule.RuleEngine;
+import com.example.detectdanger.rule.RuleResult;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -23,13 +26,25 @@ public class ScanService {
     private final NormalizeService normalizeService;
     private final RiskScoreCalculate riskScoreCalculate;
     private final RiskLevelCalculator riskLevelCalculator;
+    private final RuleEngine ruleEngine;
 
-
+    @Transactional
     public ScanResponse createScan(ScanRequest request, Authentication authentication){
 
+        //validate input
         validationService.validate(request.getInputType(),request.getContent());
 
+        //normalize input
         normalizeService.normalize(request.getInputType(),request.getContent());
+
+        //Check rule
+        List<RuleResult> results = ruleEngine.evaluate(request.getContent(),request.getInputType());
+
+        //risk score calculate
+        int riskScore = riskScoreCalculate.calculate(results);
+
+        //risk level calculate
+        RiskLevel riskLevel = riskLevelCalculator.riskLevelCalculate(riskScore);
 
 
         User user = userRepository.findByEmail(authentication.getName())
@@ -38,8 +53,9 @@ public class ScanService {
                 .user(user)
                 .inputType(request.getInputType())
                 .content(request.getContent())
-                .riskScore(0)
-                .riskLevel(RiskLevel.LOW)
+                .riskScore(riskScore)
+                .riskLevel(riskLevel)
+                .evidence(results.stream().map(RuleResult::reason).toList())
                 .build();
 
         Scan saved = scanRepository.save(scan);
@@ -53,6 +69,7 @@ public class ScanService {
                 .inputType(saved.getInputType())
                 .riskScore(saved.getRiskScore())
                 .riskLevel(saved.getRiskLevel())
+                .ruleResultList(saved.getEvidence())
                 .createdAt(saved.getCreatedAt())
                 .build();
 
