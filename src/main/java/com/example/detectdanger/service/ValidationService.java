@@ -12,12 +12,13 @@ import java.util.List;
 public class ValidationService {
     private final List<InputValidation> validators;
 
-    public void validate(InputType inputType, String content){
+    public String validate(InputType inputType, String content){
         InputValidation inputValidation = validators.stream()
                 .filter(v->v.supports(inputType))
                 .findFirst()
                 .orElseThrow(() ->new IllegalArgumentException("Input type khong duoc ho tro"));
 
         inputValidation.validate(content);
+        return content;
     }
 }
