@@ -1,6 +1,5 @@
-package com.example.detectdanger.repository;
+package com.example.detectdanger.entity;
 
-import com.example.detectdanger.entity.InputType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,10 +22,13 @@ public class VerifiedData {
     @Column(nullable = false, length = 500)
     private String normalizedValue;
 
-    @Column(length = 500)
+    @Column(length = 1000)
     private String reason;
 
+    @Column(nullable = false)
     private Long verifiedBy;
 
+    @Column(nullable = false)
     private LocalDateTime verifiedAt;
+
 }
