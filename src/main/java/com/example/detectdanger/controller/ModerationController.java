@@ -1,10 +1,14 @@
 package com.example.detectdanger.controller;
 
+import com.example.detectdanger.dto.audit.AuditResponse;
+import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
 import com.example.detectdanger.service.ModerateService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +32,32 @@ public class ModerationController {
 
     @PatchMapping("/reports/{id}/review")
     @PreAuthorize("hasRole('MODERATOR')")
-    public ResponseEntity<ReportResponse> checkReport(@PathVariable Long id) {
-        ReportResponse response = moderateService.checkReport(id);
+    public ResponseEntity<ReportResponse> checkReport(@PathVariable Long id,Authentication authentication) {
+        ReportResponse response = moderateService.checkReport(id,authentication);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/reports/{id}/verify")
+    @PreAuthorize("hasRole('MODERATOR')")
+    public ResponseEntity<ReportResponse> verifyReport(@PathVariable Long id,
+                                                       @Valid @RequestBody ModeratorDecisionResponse response,
+                                                       Authentication authentication){
+        ReportResponse verifyResponse = moderateService.verifyReport(id,response,authentication);
+        return ResponseEntity.ok(verifyResponse);
+    }
+
+    @PatchMapping("/reports/{id}/reject")
+    @PreAuthorize("hasRole('MODERATOR')")
+    public ResponseEntity<ReportResponse> rejectReport(@PathVariable Long id,
+                                                       @Valid @RequestBody ModeratorDecisionResponse response,
+                                                       Authentication authentication){
+        ReportResponse rejectResponse = moderateService.rejectReport(id,response,authentication);
+        return ResponseEntity.ok(rejectResponse);
+    }
+
+    @GetMapping("/reports/{id}/audit")
+    @PreAuthorize("hasRole('MODERATOR')")
+    public ResponseEntity<List<AuditResponse>> getReportAudit(@PathVariable Long id){
+        return ResponseEntity.ok(moderateService.getReportAudit(id));
     }
 }
