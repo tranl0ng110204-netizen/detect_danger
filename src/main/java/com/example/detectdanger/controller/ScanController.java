@@ -2,6 +2,7 @@ package com.example.detectdanger.controller;
 
 import com.example.detectdanger.dto.scan.ScanRequest;
 import com.example.detectdanger.dto.scan.ScanResponse;
+import com.example.detectdanger.security.ratelimit.RateLimit;
 import com.example.detectdanger.service.ScanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import java.util.List;
 public class ScanController {
     private final ScanService scanService;
 
+
+    @RateLimit(capacity = 5,durationHours = 1)
     @PostMapping("/create")
     public ResponseEntity<ScanResponse> createReport(@Valid @RequestBody ScanRequest request, Authentication authentication){
         return ResponseEntity.ok(
@@ -24,6 +27,7 @@ public class ScanController {
         );
     }
 
+    @RateLimit(capacity = 5, durationHours = 1)
     @GetMapping("/history")
     public ResponseEntity<List<ScanResponse>> getScanHistory(Authentication authentication){
         return ResponseEntity.ok(

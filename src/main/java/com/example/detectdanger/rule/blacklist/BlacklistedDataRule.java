@@ -1,5 +1,5 @@
 package com.example.detectdanger.rule.blacklist;
-
+import com.example.detectdanger.repository.BlackListRepository;
 import com.example.detectdanger.entity.InputType;
 import com.example.detectdanger.repository.VerifiedDataRepository;
 import com.example.detectdanger.rule.DetectionRule;
@@ -15,7 +15,8 @@ import java.util.List;
 public class BlacklistedDataRule implements DetectionRule {
     private static final int WEIGHT = 40;
 
-   private final VerifiedDataRepository verifiedDataRepository;
+    private final VerifiedDataRepository verifiedDataRepository;
+    private final BlackListRepository blackListRepository;
 
     @Override
     public String getCode() {
@@ -58,13 +59,11 @@ public class BlacklistedDataRule implements DetectionRule {
 
     ) {
 
-        boolean matched =
-                verifiedDataRepository
-                        .existsByInputTypeAndNormalizedValue(
-                                inputType,
-                                input
-                        );
-
+        boolean matched = blackListRepository.
+                existsByInputTypeAndNormalizedValueAndActiveTrue(
+                    inputType,
+                    input
+        );
         if (matched) {
 
             return new RuleResult(

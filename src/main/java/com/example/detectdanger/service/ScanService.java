@@ -5,6 +5,7 @@ import com.example.detectdanger.dto.scan.ScanResponse;
 import com.example.detectdanger.entity.RiskLevel;
 import com.example.detectdanger.entity.Scan;
 import com.example.detectdanger.entity.User;
+import com.example.detectdanger.repository.BlackListRepository;
 import com.example.detectdanger.repository.ScanRepository;
 import com.example.detectdanger.repository.UserRepository;
 import com.example.detectdanger.rule.RuleEngine;
