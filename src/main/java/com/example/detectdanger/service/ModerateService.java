@@ -1,6 +1,7 @@
 package com.example.detectdanger.service;
 
 import com.example.detectdanger.dto.report.ReportResponse;
+import com.example.detectdanger.entity.Report;
 import com.example.detectdanger.entity.ReportStatus;
 import com.example.detectdanger.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,26 @@ public class ModerateService {
                         r.getCreatedAt(),
                         r.getUpdatedAt()
                 )).toList();
+    }
+
+    @Transactional
+    public ReportResponse checkReport(Long id){
+        Report selectedReport = reportRepository.findById(id).orElseThrow(()-> new RuntimeException("report not found"));
+        if(selectedReport.getStatus() != ReportStatus.PENDING){
+            throw new RuntimeException("only Pending reports appear");
+        }
+        selectedReport.setStatus(ReportStatus.REVIEWING);
+
+        Report saved = reportRepository.save(selectedReport);
+
+        return new ReportResponse(
+                saved.getId(),
+                saved.getReporterId(),
+                saved.getInputType(),
+                saved.getStatus(),
+                saved.getReason(),
+                saved.getCreatedAt(),
+                saved.getUpdatedAt()
+        );
     }
 }
