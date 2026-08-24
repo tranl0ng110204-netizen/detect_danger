@@ -4,12 +4,18 @@ import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
 import com.example.detectdanger.service.moderator.ModerateService;
+import com.example.detectdanger.entity.ReportStatus;
+import com.example.detectdanger.repository.ReportRepository;
+import com.example.detectdanger.service.ModerateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
