@@ -1,6 +1,6 @@
 package com.example.detectdanger.service;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 import com.example.detectdanger.validation.InputValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

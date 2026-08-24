@@ -1,6 +1,6 @@
 package com.example.detectdanger.repository;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 import com.example.detectdanger.entity.VerifiedData;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -3,6 +3,7 @@ package com.example.detectdanger.controller;
 import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
+import com.example.detectdanger.service.moderator.ModerateService;
 import com.example.detectdanger.entity.ReportStatus;
 import com.example.detectdanger.repository.ReportRepository;
 import com.example.detectdanger.service.ModerateService;

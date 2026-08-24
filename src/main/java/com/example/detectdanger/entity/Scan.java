@@ -1,5 +1,7 @@
 package com.example.detectdanger.entity;
 
+import com.example.detectdanger.entity.Enum.InputType;
+import com.example.detectdanger.entity.Enum.RiskLevel;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,5 +1,8 @@
 package com.example.detectdanger.entity;
 
+import com.example.detectdanger.entity.Enum.InputType;
+import com.example.detectdanger.entity.Enum.ReportStatus;
+import com.example.detectdanger.entity.Enum.ReporterStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -26,6 +29,10 @@ public class Report {
 
     @Column(nullable = false)
     private Long reporterId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReporterStatus reporterStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

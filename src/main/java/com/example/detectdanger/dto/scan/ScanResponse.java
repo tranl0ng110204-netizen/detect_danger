@@ -1,8 +1,7 @@
 package com.example.detectdanger.dto.scan;
 
-import com.example.detectdanger.entity.InputType;
-import com.example.detectdanger.entity.RiskLevel;
-import com.example.detectdanger.rule.RuleResult;
+import com.example.detectdanger.entity.Enum.InputType;
+import com.example.detectdanger.entity.Enum.RiskLevel;
 import lombok.Builder;
 import lombok.Getter;
 

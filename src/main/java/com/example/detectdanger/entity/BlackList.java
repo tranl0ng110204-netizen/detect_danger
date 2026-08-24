@@ -1,5 +1,7 @@
 package com.example.detectdanger.entity;
 
+import com.example.detectdanger.entity.Enum.BlackListSource;
+import com.example.detectdanger.entity.Enum.InputType;
 import jakarta.persistence.*;
 import lombok.*;
 

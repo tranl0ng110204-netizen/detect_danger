@@ -1,5 +1,6 @@
 package com.example.detectdanger.entity;
 
+import com.example.detectdanger.entity.Enum.AuditAction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

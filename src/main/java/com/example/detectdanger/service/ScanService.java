@@ -1,17 +1,21 @@
 package com.example.detectdanger.service;
 
+import com.example.detectdanger.dto.page.PageResponse;
 import com.example.detectdanger.dto.scan.ScanRequest;
 import com.example.detectdanger.dto.scan.ScanResponse;
-import com.example.detectdanger.entity.RiskLevel;
+import com.example.detectdanger.entity.Enum.RiskLevel;
 import com.example.detectdanger.entity.Scan;
 import com.example.detectdanger.entity.User;
-import com.example.detectdanger.repository.BlackListRepository;
 import com.example.detectdanger.repository.ScanRepository;
 import com.example.detectdanger.repository.UserRepository;
-import com.example.detectdanger.rule.RuleEngine;
-import com.example.detectdanger.rule.RuleResult;
+import com.example.detectdanger.rule.scan.RuleEngine;
+import com.example.detectdanger.rule.scan.RuleResult;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,11 @@ public class ScanService {
 
         //normalize input
         normalizeService.normalize(request.getInputType(),request.getContent());
+
+        boolean exists = scanRepository.existsByContent(request.getContent());
+        if(exists){
+            throw new IllegalArgumentException("ban da scan 1 ket qua tuong tu truoc do roi");
+        }
 
         //Check rule
         List<RuleResult> results = ruleEngine.evaluate(request.getContent(),request.getInputType());
@@ -87,5 +96,31 @@ public class ScanService {
                 .toList();
 
     }
+
+    public PageResponse<ScanResponse> getHistoryScanWithPanigation(Authentication authentication, int page, int size ){
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.DESC,
+                        "createdAt"
+                )
+        );
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(()->new RuntimeException("user not found"));
+        Page<Scan> history =  scanRepository.findByUserId(user.getId(),pageable);
+        List<ScanResponse> historyPage = history.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return PageResponse.<ScanResponse>builder()
+                .content(historyPage)
+                .page(history.getNumber())
+                .size(history.getSize())
+                .totalElements(history.getTotalElements())
+                .totalPages(history.getTotalPages())
+                .last(history.isLast())
+                .build();
+    }
+
 
 }

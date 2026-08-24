@@ -1,6 +1,6 @@
 package com.example.detectdanger.service;
 
-import com.example.detectdanger.entity.RiskLevel;
+import com.example.detectdanger.entity.Enum.RiskLevel;
 import org.springframework.stereotype.Service;
 
 @Service

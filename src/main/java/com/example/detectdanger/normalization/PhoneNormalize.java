@@ -1,6 +1,6 @@
 package com.example.detectdanger.normalization;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 import org.springframework.stereotype.Component;
 
 @Component

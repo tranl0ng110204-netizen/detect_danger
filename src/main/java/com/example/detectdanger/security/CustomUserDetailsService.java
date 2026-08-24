@@ -22,6 +22,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                         new UsernameNotFoundException(
                                 "User not found"
                         ));
+        if(user.isDelete()){
+            throw new RuntimeException("User account has been canceled");
+        }
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

@@ -1,6 +1,6 @@
 package com.example.detectdanger.normalization;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,8 +12,8 @@ public class MessageNormalize implements InputNormalizer {
 
     @Override
     public String normalize(String input){
-        return input.trim()
-                .replaceAll("\\s+", " ")
+        return input.strip()
+                .replaceAll("\\p{Z}++", " ")
                 .toLowerCase();
 
 
