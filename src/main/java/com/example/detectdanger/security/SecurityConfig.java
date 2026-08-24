@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -40,6 +41,9 @@ public class SecurityConfig {
     ) throws Exception{
         httpSecurity
                 .csrf(csrf-> csrf.disable())
+
+                .exceptionHandling(exception->
+                        exception.accessDeniedHandler(customAccessDeniedHandler))
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
