@@ -1,6 +1,6 @@
 package com.example.detectdanger.service;
 
-import com.example.detectdanger.rule.RuleResult;
+import com.example.detectdanger.rule.scan.RuleResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

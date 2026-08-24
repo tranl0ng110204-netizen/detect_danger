@@ -4,7 +4,7 @@ import com.example.detectdanger.dto.blacklist.BlackListRequest;
 import com.example.detectdanger.dto.blacklist.BlackListResponse;
 import com.example.detectdanger.entity.BlackList;
 import com.example.detectdanger.repository.BlackListRepository;
-import com.example.detectdanger.entity.BlackListSource;
+import com.example.detectdanger.entity.Enum.BlackListSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

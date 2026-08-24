@@ -1,6 +1,6 @@
 package com.example.detectdanger.validation;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;

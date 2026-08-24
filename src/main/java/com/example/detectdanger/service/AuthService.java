@@ -3,7 +3,8 @@ package com.example.detectdanger.service;
 import com.example.detectdanger.dto.auth.LoginRequest;
 import com.example.detectdanger.dto.auth.LoginResponse;
 import com.example.detectdanger.dto.auth.RegisterRequest;
-import com.example.detectdanger.entity.Role;
+import com.example.detectdanger.entity.Enum.Role;
+import com.example.detectdanger.entity.Enum.UserStatus;
 import com.example.detectdanger.entity.User;
 import com.example.detectdanger.repository.UserRepository;
 import com.example.detectdanger.security.JwtService;
@@ -41,6 +42,7 @@ public class AuthService {
                         passwordEncoder.encode(request.getPassword())
                 )
                 .role(Role.USER)
+                .userStatus(UserStatus.ACTIVE)
                 .build();
         userRepository.save(user);
     }
@@ -58,6 +60,11 @@ public class AuthService {
 
         var userDetails = userRepository.findByEmail(request.getEmail())
                 .orElseThrow();
+
+        boolean isDelete = userDetails.isDelete();
+        if(isDelete){
+            throw  new RuntimeException("tai khoan da bi dinh chi vo thoi han");
+        }
 
 
         var springUser =

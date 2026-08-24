@@ -1,7 +1,7 @@
 package com.example.detectdanger.dto.blacklist;
 
-import com.example.detectdanger.entity.BlackListSource;
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.BlackListSource;
+import com.example.detectdanger.entity.Enum.InputType;
 
 import java.time.LocalDateTime;
 

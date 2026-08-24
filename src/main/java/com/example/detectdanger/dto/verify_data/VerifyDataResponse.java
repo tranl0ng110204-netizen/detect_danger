@@ -1,6 +1,6 @@
 package com.example.detectdanger.dto.verify_data;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 
 import java.time.LocalDateTime;
 

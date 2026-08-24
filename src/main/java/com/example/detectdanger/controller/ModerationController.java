@@ -3,7 +3,7 @@ package com.example.detectdanger.controller;
 import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
-import com.example.detectdanger.service.ModerateService;
+import com.example.detectdanger.service.moderator.ModerateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

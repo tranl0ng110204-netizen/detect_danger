@@ -1,6 +1,6 @@
 package com.example.detectdanger.validation;
 
-import com.example.detectdanger.entity.InputType;
+import com.example.detectdanger.entity.Enum.InputType;
 
 public interface InputValidation {
     boolean supports (InputType inputType);

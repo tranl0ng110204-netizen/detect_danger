@@ -1,11 +1,13 @@
 package com.example.detectdanger.controller;
 
+import com.example.detectdanger.dto.API_Response;
 import com.example.detectdanger.dto.auth.LoginRequest;
 import com.example.detectdanger.dto.auth.LoginResponse;
 import com.example.detectdanger.dto.auth.RegisterRequest;
 import com.example.detectdanger.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +26,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request){
+        try{
+            return ResponseEntity.ok(authService.login(request));
+        }
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new API_Response(e.getMessage(),null));
+        }
+
     }
 
 }
