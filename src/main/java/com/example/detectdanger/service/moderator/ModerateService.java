@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -30,8 +31,9 @@ public class ModerateService {
     private final ReportReviewEngine reportReviewEngine;
 
     @Transactional(readOnly = true)
-    public List<ReportResponse> getPendingReport(){
-        return reportRepository.findByStatus(ReportStatus.PENDING)
+    public List<ReportResponse> getCheckingReport(){
+        return reportRepository.findByStatusIn(
+                        Arrays.asList(ReportStatus.PENDING,ReportStatus.REVIEWING))
                 .stream()
                 .map(r->new ReportResponse(
                         r.getId(),
@@ -43,6 +45,12 @@ public class ModerateService {
                         r.getCreatedAt(),
                         r.getUpdatedAt()
                 )).toList();
+    }
+
+    @Transactional
+    public Report getReportDetail(Long id){
+        return reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+
     }
 
     @Transactional
