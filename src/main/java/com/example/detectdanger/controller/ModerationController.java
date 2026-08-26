@@ -3,6 +3,7 @@ package com.example.detectdanger.controller;
 import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
+import com.example.detectdanger.entity.Report;
 import com.example.detectdanger.service.moderator.ModerateService;
 import com.example.detectdanger.entity.ReportStatus;
 import com.example.detectdanger.repository.ReportRepository;
@@ -25,11 +26,22 @@ import java.util.List;
 public class ModerationController {
     private final ModerateService moderateService;
 
-    @GetMapping("/reports/pending")
+    @GetMapping("/reports/checking")
     @PreAuthorize("hasRole('MODERATOR')")
-    public ResponseEntity<List<ReportResponse>> getPendingReports(){
+    public ResponseEntity<List<ReportResponse>> getCheckingReports(){
         try{
-            return ResponseEntity.ok(moderateService.getPendingReport());
+            return ResponseEntity.ok(moderateService.getCheckingReport());
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @GetMapping("/reports/{id}")
+    @PreAuthorize("hasRole('MODERATOR')")
+    public ResponseEntity<Report> getReportDetail(@PathVariable Long id){
+        try{
+            return ResponseEntity.ok(moderateService.getReportDetail(id));
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }

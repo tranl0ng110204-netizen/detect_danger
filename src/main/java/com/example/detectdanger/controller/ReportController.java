@@ -25,7 +25,7 @@ public class ReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/my-reports")
+    @GetMapping("/my")
     public ResponseEntity<List<ReportResponse>> userReports(Authentication authentication){
         List<ReportResponse> response = reportService.userReports(authentication);
 

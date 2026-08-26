@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report,Long> {
 
-    List<Report> findByStatus(ReportStatus status);
+    List<Report> findByStatusIn(List<ReportStatus> statuses);
 
     List<Report> findByReporterId(Long reporterId);
 
