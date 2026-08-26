@@ -33,7 +33,7 @@ public class ModerationController {
 
     @GetMapping("/reports/{id}")
     @PreAuthorize("hasRole('MODERATOR')")
-    public ResponseEntity<Report> getReportDetail(@PathVariable Long id){
+    public ResponseEntity<ReportResponse> getReportDetail(@PathVariable Long id){
         try{
             return ResponseEntity.ok(moderateService.getReportDetail(id));
         } catch (RuntimeException e) {

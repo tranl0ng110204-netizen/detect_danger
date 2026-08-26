@@ -20,7 +20,7 @@ public class ReportReviewEngine {
                 .toList();
     }
 
-    public ReportReviewResult review(
+    public ReportCheckingResult review(
             ReportReviewContext context
     ) {
 
@@ -35,7 +35,7 @@ public class ReportReviewEngine {
         ReviewRecommendation recommendation =
                 determineRecommendation(totalScore);
 
-        return ReportReviewResult.builder()
+        return ReportCheckingResult.builder()
                 .totalScore(totalScore)
                 .recommendation(recommendation)
                 .ruleResults(results)

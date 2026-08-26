@@ -2,7 +2,7 @@ package com.example.detectdanger.dto.report;
 
 import com.example.detectdanger.entity.Enum.InputType;
 import com.example.detectdanger.entity.Enum.ReportStatus;
-import com.example.detectdanger.rule.review.ReportReviewResult;
+import com.example.detectdanger.entity.ReportReviewResult;
 
 import java.time.LocalDateTime;
 
@@ -22,5 +22,6 @@ public record ReportResponse(
         LocalDateTime createdAt,
 
         LocalDateTime updatedAt
-) {
+)
+{
 }

@@ -8,8 +8,6 @@ import com.example.detectdanger.entity.Enum.ReportStatus;
 import com.example.detectdanger.entity.User;
 import com.example.detectdanger.repository.ReportRepository;
 import com.example.detectdanger.repository.UserRepository;
-import com.example.detectdanger.rule.review.ReportReviewResult;
-import com.example.detectdanger.service.moderator.ReporterReputationService;
 import com.example.detectdanger.service.moderator.ReporterRiskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +59,7 @@ public class ReportService {
         report.setReporterStatus(reporterStatus);
         report.setReason(request.reason());
         Report savedReport = reportRepository.save(report);
+        reportRepository.flush();
 
         return new ReportResponse(
                 savedReport.getId(),

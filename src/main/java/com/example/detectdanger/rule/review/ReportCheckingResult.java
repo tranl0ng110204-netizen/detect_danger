@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @Builder
-public class ReportReviewResult {
+public class ReportCheckingResult {
     private int totalScore;
 
     private ReviewRecommendation recommendation;

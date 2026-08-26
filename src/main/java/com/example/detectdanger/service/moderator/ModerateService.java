@@ -9,8 +9,8 @@ import com.example.detectdanger.entity.Enum.ReportStatus;
 import com.example.detectdanger.repository.*;
 import com.example.detectdanger.rule.review.ReportReviewContext;
 import com.example.detectdanger.rule.review.ReportReviewEngine;
-import com.example.detectdanger.rule.review.ReportReviewResult;
-import com.example.detectdanger.rule.review.review_rules.*;
+import com.example.detectdanger.rule.review.ReportCheckingResult;
+import com.example.detectdanger.rule.review.review_rules.ReviewResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class ModerateService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final AuditRepository auditRepository;
-    private final ReporterReputationService reporterReputationService;
+    private final ReportReviewResultRepository reportReviewResultRepository;
     private final BlackListRepository blackListRepository;
     private final VerifyDataRepository verifyDataRepository;
     private final ReportReviewEngine reportReviewEngine;
@@ -47,9 +47,52 @@ public class ModerateService {
                 )).toList();
     }
 
+
+    private ReportReviewContext createContext(Report report){
+        User reporter = userRepository.findById(report.getReporterId()).orElseThrow(()-> new RuntimeException("user not found"));
+        return new ReportReviewContext(
+                report,
+                reporter,
+                reporter.getReputationScore(),
+                reportRepository.existsByNormalizedValueAndStatus(
+                        report.getNormalizedValue(), report.getStatus()),
+                verifyDataRepository.
+                        existsByInputTypeAndNormalizedValue(report.getInputType(),report.getNormalizedValue()),
+                blackListRepository.
+                        existsByInputTypeAndNormalizedValueAndActiveTrue(report.getInputType(),report.getNormalizedValue())
+        );
+    }
+
+
+
     @Transactional
-    public Report getReportDetail(Long id){
-        return reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+    public ReportResponse getReportDetail(Long id){
+        Report saved = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+        //tạo report review result
+        ReportReviewContext context = createContext(saved);
+        ReportCheckingResult reportCheckingResult = reportReviewEngine.review(context);
+        List<String> rulesChecking = reportCheckingResult.getRuleResults().stream().map(
+                        ReviewResult::getReason
+                )
+                .toList();
+        ReportReviewResult reportReviewResult = ReportReviewResult.builder()
+                .reportId(id)
+                .totalScore(reportCheckingResult.getTotalScore())
+                .recommendation(reportCheckingResult.getRecommendation())
+                .ruleResult(rulesChecking)
+                .build();
+
+        return new ReportResponse(
+                saved.getId(),
+                saved.getReporterId(),
+                saved.getInputType(),
+                saved.getStatus(),
+                saved.getReason(),
+                reportReviewResult,
+                saved.getCreatedAt(),
+                saved.getUpdatedAt()
+        );
+
 
     }
 
@@ -63,7 +106,6 @@ public class ModerateService {
             throw new RuntimeException("only Pending reports appear");
         }
 
-
         //goi user Moderator
         User moderator = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(()-> new RuntimeException("user not found"));
@@ -72,22 +114,20 @@ public class ModerateService {
         selectedReport.setStatus(ReportStatus.REVIEWING);
         Report saved = reportRepository.save(selectedReport);
 
-        //check report review result
-        User reporter = userRepository.findById(saved.getReporterId()).orElseThrow(()-> new RuntimeException("user not found"));
-        ReportReviewContext context = new ReportReviewContext(
-                saved,
-                reporter,
-                reporter.getReputationScore(),
-                reportRepository.
-                        existsByNormalizedValueAndStatus(saved.getNormalizedValue(),saved.getStatus()),
-                verifyDataRepository.
-                        existsByInputTypeAndNormalizedValue(saved.getInputType(),saved.getNormalizedValue()),
-                blackListRepository.
-                        existsByInputTypeAndNormalizedValueAndActiveTrue(saved.getInputType(),saved.getNormalizedValue())
 
-
-        );
-        ReportReviewResult reportReviewResult = reportReviewEngine.review(context);
+        //tạo report review result
+        ReportReviewContext context = createContext(saved);
+        ReportCheckingResult reportCheckingResult = reportReviewEngine.review(context);
+        List<String> rulesChecking = reportCheckingResult.getRuleResults().stream().map(
+                        ReviewResult::getReason
+        )
+                .toList();
+        ReportReviewResult reportReviewResult = ReportReviewResult.builder()
+                .reportId(id)
+                .totalScore(reportCheckingResult.getTotalScore())
+                .recommendation(reportCheckingResult.getRecommendation())
+                .ruleResult(rulesChecking)
+                .build();
 
 
         //tao Audit
@@ -115,6 +155,7 @@ public class ModerateService {
     public ReportResponse verifyReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
         //tim report
         Report selectReport = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+        ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
 
         //check report co trong trang thai REVIEWING khong?
         if(selectReport.getStatus() != ReportStatus.REVIEWING){
@@ -125,34 +166,10 @@ public class ModerateService {
         String email = authentication.getName();
         User moderator = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("user khong duoc verify"));
 
-        //check xem report da co trong database chua
-        boolean alreadyVerified = verifyDataRepository.existsByInputTypeAndNormalizedValue(selectReport.getInputType(),selectReport.getNormalizedValue());
-
-        if(alreadyVerified){
-            throw new RuntimeException("report already have in database");
-        }
-
         //chuyen sang REVIEWING -> VERIFY
         selectReport.setStatus(ReportStatus.VERIFIED);
         Report savedReport = reportRepository.save(selectReport);
 
-        //lay user va set reputation score
-        //check report review result
-        User reporter = userRepository.findById(savedReport.getReporterId()).orElseThrow(()-> new RuntimeException("user not found"));
-        ReportReviewContext context = new ReportReviewContext(
-                savedReport,
-                reporter,
-                reporter.getReputationScore(),
-                reportRepository.
-                        existsByNormalizedValueAndStatus(savedReport.getNormalizedValue(),savedReport.getStatus()),
-                verifyDataRepository.
-                        existsByInputTypeAndNormalizedValue(savedReport.getInputType(),savedReport.getNormalizedValue()),
-                blackListRepository.
-                        existsByInputTypeAndNormalizedValueAndActiveTrue(savedReport.getInputType(),savedReport.getNormalizedValue())
-
-
-        );
-        ReportReviewResult reportReviewResult = reportReviewEngine.review(context);
 
         //tao VerifyData
         VerifiedData verifiedData = new VerifiedData();
@@ -161,8 +178,7 @@ public class ModerateService {
         verifiedData.setReportId(id);
         verifiedData.setVerifiedBy(moderator.getId());
         verifyDataRepository.save(verifiedData);
-
-
+        verifyDataRepository.flush();
 
 
 
@@ -190,8 +206,9 @@ public class ModerateService {
 
     @Transactional
     public ReportResponse rejectReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
-        //tim report
+        //tim report, report result theo id của report
         Report selectReport = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+        ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
 
         //check report co trong trang thai REVIEWING khong?
         if(selectReport.getStatus() != ReportStatus.REVIEWING){
@@ -205,26 +222,6 @@ public class ModerateService {
         //chuyen tu REVIEW -> REJECT
         selectReport.setStatus(ReportStatus.REJECTED);
         Report savedReport = reportRepository.save(selectReport);
-
-        //lay user va set reputation score
-        //check report review result
-        User reporter = userRepository.findById(savedReport.getReporterId()).orElseThrow(()-> new RuntimeException("user not found"));
-        ReportReviewContext context = new ReportReviewContext(
-                savedReport,
-                reporter,
-                reporter.getReputationScore(),
-                reportRepository.
-                        existsByNormalizedValueAndStatus(savedReport.getNormalizedValue(),savedReport.getStatus()),
-                verifyDataRepository.
-                        existsByInputTypeAndNormalizedValue(savedReport.getInputType(),savedReport.getNormalizedValue()),
-                blackListRepository.
-                        existsByInputTypeAndNormalizedValueAndActiveTrue(savedReport.getInputType(),savedReport.getNormalizedValue())
-
-
-        );
-        ReportReviewResult reportReviewResult = reportReviewEngine.review(context);
-
-
 
         //tao audit
         Audit audit = new Audit();
