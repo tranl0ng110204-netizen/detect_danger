@@ -6,20 +6,12 @@ import com.example.detectdanger.rule.scan.RuleResult;
 import com.example.detectdanger.rule.scan.RuleStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class SuspiciousEmailRule implements DetectionRule {
     private static final int WEIGHT = 20;
-
-    private static final List<String> IMPERSONATION_PATTERNS =
-            List.of(
-                    "paypa1",
-                    "micr0soft",
-                    "faceb00k",
-                    "g00gle",
-                    "app1e"
-            );
 
     @Override
     public String getCode() {
@@ -28,7 +20,7 @@ public class SuspiciousEmailRule implements DetectionRule {
 
     @Override
     public String getName() {
-        return "Suspicious Email Detection";
+        return "Suspicious Email Pattern Detection";
     }
 
     @Override
@@ -43,7 +35,7 @@ public class SuspiciousEmailRule implements DetectionRule {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -56,13 +48,81 @@ public class SuspiciousEmailRule implements DetectionRule {
             String input,
             InputType inputType
     ) {
-
-        String email = input.toLowerCase();
-
         List<String> evidence =
-                IMPERSONATION_PATTERNS.stream()
-                        .filter(email::contains)
-                        .toList();
+                new ArrayList<>();
+        if (input == null || input.isBlank()) {
+            return new RuleResult(
+                    getCode(),
+                    false,
+                    0,
+                    "Email is empty",
+                    List.of()
+            );
+        }
+
+        String email = input.trim().toLowerCase();
+        int atIndex = email.lastIndexOf("@");
+        if (atIndex <= 0
+                || atIndex == email.length() - 1) {
+            evidence.add("Invalid email structure");
+
+        } else {
+
+            String localPart = email.substring(0, atIndex);
+            String domain = email.substring(atIndex + 1);
+
+            /*
+             * Local part quá dài.
+             */
+            if (localPart.length() > 50) {
+
+                evidence.add(
+                        "Unusually long email local-part"
+                );
+            }
+
+            /*
+             * Có nhiều dấu chấm liên tiếp.
+             */
+            if (localPart.contains("..")) {
+
+                evidence.add(
+                        "Email local-part contains consecutive dots"
+                );
+            }
+
+            /*
+             * Domain có nhiều subdomain.
+             */
+            if (domain.split("\\.").length > 4) {
+
+                evidence.add(
+                        "Email domain contains unusually many subdomains"
+                );
+            }
+
+            /*
+             * Domain phải có dấu chấm.
+             */
+            if (!domain.contains(".")) {
+
+                evidence.add(
+                        "Email domain has no top-level domain"
+                );
+            }
+
+            /*
+             * Ký tự bất thường.
+             */
+            if (!localPart.matches(
+                    "[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+"
+            )) {
+
+                evidence.add(
+                        "Email local-part contains unusual characters"
+                );
+            }
+        }
 
         if (evidence.isEmpty()) {
 
@@ -79,8 +139,9 @@ public class SuspiciousEmailRule implements DetectionRule {
                 getCode(),
                 true,
                 WEIGHT,
-                "Possible email impersonation detected",
+                "Suspicious email pattern detected",
                 evidence
         );
+
     }
 }

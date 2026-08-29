@@ -61,7 +61,7 @@ public class ModerationController {
     @PatchMapping("/reports/{id}/reject")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ReportResponse> rejectReport(@PathVariable Long id,
-                                                       @Valid @RequestBody ModeratorDecisionResponse response,
+                                                        @Valid @RequestBody ModeratorDecisionResponse response,
                                                        Authentication authentication){
         ReportResponse rejectResponse = moderateService.rejectReport(id,response,authentication);
         return ResponseEntity.ok(rejectResponse);

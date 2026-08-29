@@ -37,7 +37,7 @@ public class SuspiciousUrlRule implements DetectionRule {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -63,21 +63,35 @@ public class SuspiciousUrlRule implements DetectionRule {
             String host = uri.getHost();
 
             if (host == null) {
-                evidence.add("Invalid host");
-            }
+                evidence.add(
+                        "Missing hostname"
+                );
 
-            if (host != null && isIpAddress(host)) {
-                evidence.add("URL uses IP address");
+            } else {
+                if (host.split("\\.").length > 4) {
+                    evidence.add(
+                            "Unusually high number of subdomains"
+                    );
+                }
+                if (host.contains("--")) {
+                    evidence.add(
+                            "Hostname contains suspicious pattern"
+                    );
+                }
             }
-
-            if (input.contains("@")) {
-                evidence.add("URL contains '@'");
+            if (uri.getUserInfo() != null) {
+                evidence.add(
+                        "URL contains user information"
+                );
             }
-
-            if (host != null && host.split("\\.").length > 4) {
-                evidence.add("Too many subdomains");
+            String path =
+                    uri.getPath();
+            if (path != null
+                    && path.length() > 200) {
+                evidence.add(
+                        "Unusually long URL path"
+                );
             }
-
         } catch (URISyntaxException e) {
 
             evidence.add("Invalid URL format");

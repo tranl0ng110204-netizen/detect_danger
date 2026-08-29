@@ -37,8 +37,9 @@ public class ModerateService {
                 .stream()
                 .map(r->new ReportResponse(
                         r.getId(),
-                        r.getReporterId(),
+                        r.getReporter().getId(),
                         r.getInputType(),
+                        r.getNormalizedValue(),
                         r.getStatus(),
                         r.getReason(),
                         null,
@@ -49,7 +50,7 @@ public class ModerateService {
 
 
     private ReportReviewContext createContext(Report report){
-        User reporter = userRepository.findById(report.getReporterId()).orElseThrow(()-> new RuntimeException("user not found"));
+        User reporter = userRepository.findById(report.getReporter().getId()).orElseThrow(()-> new RuntimeException("user not found"));
         return new ReportReviewContext(
                 report,
                 reporter,
@@ -76,7 +77,6 @@ public class ModerateService {
                 )
                 .toList();
         ReportReviewResult reportReviewResult = ReportReviewResult.builder()
-                .reportId(id)
                 .totalScore(reportCheckingResult.getTotalScore())
                 .recommendation(reportCheckingResult.getRecommendation())
                 .ruleResult(rulesChecking)
@@ -84,8 +84,9 @@ public class ModerateService {
 
         return new ReportResponse(
                 saved.getId(),
-                saved.getReporterId(),
+                saved.getReporter().getId(),
                 saved.getInputType(),
+                saved.getNormalizedValue(),
                 saved.getStatus(),
                 saved.getReason(),
                 reportReviewResult,
@@ -123,7 +124,6 @@ public class ModerateService {
         )
                 .toList();
         ReportReviewResult reportReviewResult = ReportReviewResult.builder()
-                .reportId(id)
                 .totalScore(reportCheckingResult.getTotalScore())
                 .recommendation(reportCheckingResult.getRecommendation())
                 .ruleResult(rulesChecking)
@@ -141,8 +141,9 @@ public class ModerateService {
         //tra ve report response
         return new ReportResponse(
                 saved.getId(),
-                saved.getReporterId(),
+                saved.getReporter().getId(),
                 saved.getInputType(),
+                saved.getNormalizedValue(),
                 saved.getStatus(),
                 saved.getReason(),
                 reportReviewResult,
@@ -193,8 +194,9 @@ public class ModerateService {
 
         return new ReportResponse(
                 savedReport.getId(),
-                savedReport.getReporterId(),
+                savedReport.getReporter().getId(),
                 savedReport.getInputType(),
+                savedReport.getNormalizedValue(),
                 savedReport.getStatus(),
                 savedReport.getReason(),
                 reportReviewResult,
@@ -235,8 +237,9 @@ public class ModerateService {
 
         return new ReportResponse(
                 savedReport.getId(),
-                savedReport.getReporterId(),
+                savedReport.getReporter().getId(),
                 savedReport.getInputType(),
+                savedReport.getNormalizedValue(),
                 savedReport.getStatus(),
                 savedReport.getReason(),
                 reportReviewResult,

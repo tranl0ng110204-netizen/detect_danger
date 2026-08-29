@@ -19,8 +19,11 @@ public class UrlShortenerRule implements DetectionRule {
             "bit.ly",
             "tinyurl.com",
             "t.co",
+            "ow.ly",
             "is.gd",
-            "cutt.ly"
+            "buff.ly",
+            "cutt.ly",
+            "shorturl.at"
     );
     @Override
     public String getCode() {
@@ -45,7 +48,7 @@ public class UrlShortenerRule implements DetectionRule {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override

@@ -18,8 +18,9 @@ public class ReportReviewResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long reportId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "report_id",nullable = false)
+    private Report report;
 
     @Column(nullable = false)
     private int totalScore;

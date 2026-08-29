@@ -27,7 +27,7 @@ public class ScanController {
         );
     }
 
-    @RateLimit(capacity = 5, durationHours = 1)
+    @RateLimit(capacity = 20, durationHours = 1)
     @GetMapping("/history")
     public ResponseEntity<List<ScanResponse>> getScanHistory(Authentication authentication){
         return ResponseEntity.ok(

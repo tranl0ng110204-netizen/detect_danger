@@ -13,6 +13,8 @@ public record ReportResponse(
 
         InputType inputType,
 
+        String content,
+
         ReportStatus status,
 
         String reason,

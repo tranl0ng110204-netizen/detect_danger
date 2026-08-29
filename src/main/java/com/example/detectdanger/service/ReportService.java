@@ -5,8 +5,10 @@ import com.example.detectdanger.dto.report.ReportResponse;
 import com.example.detectdanger.entity.Enum.ReporterStatus;
 import com.example.detectdanger.entity.Report;
 import com.example.detectdanger.entity.Enum.ReportStatus;
+import com.example.detectdanger.entity.ReportReviewResult;
 import com.example.detectdanger.entity.User;
 import com.example.detectdanger.repository.ReportRepository;
+import com.example.detectdanger.repository.ReportReviewResultRepository;
 import com.example.detectdanger.repository.UserRepository;
 import com.example.detectdanger.service.moderator.ReporterRiskService;
 import jakarta.transaction.Transactional;
@@ -24,6 +26,7 @@ public class ReportService {
     private final NormalizeService normalizeService;
     private final ValidationService validationService;
     private final ReporterRiskService reporterRiskService;
+    private final ReportReviewResultRepository reportReviewResultRepository;
 
 
     @Transactional
@@ -54,7 +57,7 @@ public class ReportService {
         Report report = new Report();
         report.setInputType(request.inputType());
         report.setNormalizedValue(normalizedInput);
-        report.setReporterId(user.getId());
+        report.setReporter(user);
         report.setStatus(ReportStatus.PENDING);
         report.setReporterStatus(reporterStatus);
         report.setReason(request.reason());
@@ -63,8 +66,9 @@ public class ReportService {
 
         return new ReportResponse(
                 savedReport.getId(),
-                savedReport.getReporterId(),
+                savedReport.getReporter().getId(),
                 savedReport.getInputType(),
+                savedReport.getNormalizedValue(),
                 savedReport.getStatus(),
                 savedReport.getReason(),
                 null,
@@ -78,20 +82,39 @@ public class ReportService {
     public List<ReportResponse> userReports(Authentication authentication){
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("user not found"));
-
         List<Report> userReports = reportRepository.findByReporterId(user.getId());
 
         return userReports.stream()
                 .map(r -> new ReportResponse(
                         r.getId(),
-                        r.getReporterId(),
+                        r.getReporter().getId(),
                         r.getInputType(),
+                        r.getNormalizedValue(),
                         r.getStatus(),
                         r.getReason(),
                         null,
                         r.getCreatedAt(),
                         r.getUpdatedAt()
                 )).toList();
+
+    }
+
+    public ReportResponse getReportDetail(Long id){
+        Report selected = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("report not found"));
+        ReportReviewResult result = reportReviewResultRepository.findByReportId(id);
+
+        return new ReportResponse(
+                selected.getId(),
+                selected.getReporter().getId(),
+                selected.getInputType(),
+                selected.getNormalizedValue(),
+                selected.getStatus(),
+                selected.getReason(),
+                result,
+                selected.getCreatedAt(),
+                selected.getUpdatedAt()
+        );
 
     }
 

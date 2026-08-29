@@ -6,6 +6,7 @@ import com.example.detectdanger.rule.scan.RuleResult;
 import com.example.detectdanger.rule.scan.RuleStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -34,7 +35,7 @@ public class SuspiciousPhoneRule implements DetectionRule {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -45,40 +46,87 @@ public class SuspiciousPhoneRule implements DetectionRule {
     @Override
     public RuleResult evaluate(
             String input,
-            InputType InputType
+            InputType inputType
     ) {
 
-        String phone = input.replaceAll("\\D", "");
+        List<String> evidence =
+                new ArrayList<>();
 
-        if (phone.chars().distinct().count() == 1) {
+        if (input == null || input.isBlank()) {
 
             return new RuleResult(
                     getCode(),
-                    true,
-                    WEIGHT,
-                    "Phone contains repeated digits",
-                    List.of(phone)
+                    false,
+                    0,
+                    "Phone number is empty",
+                    List.of()
             );
         }
 
-        if (isSequential(phone)) {
-
+        String phone = normalizePhone(input);
+        if (phone.isBlank()) {
             return new RuleResult(
                     getCode(),
                     true,
                     WEIGHT,
-                    "Phone contains sequential digits",
-                    List.of(phone)
+                    "Phone contains no numeric characters",
+                    List.of(
+                            "No numeric phone content found"
+                    )
+            );
+        }
+        // ==== cac so deu giong nhau
+        if (allDigitsSame(phone)) {
+            evidence.add("All phone digits are identical");
+        }
+        if (isSequential(phone)) {
+            evidence.add(
+                    "Phone contains an ascending or descending numeric sequence"
+            );
+        }
+
+        if (evidence.isEmpty()) {
+            return new RuleResult(
+                    getCode(),
+                    false,
+                    0,
+                    "No suspicious phone pattern detected",
+                    List.of()
             );
         }
 
         return new RuleResult(
                 getCode(),
-                false,
-                0,
-                "No suspicious phone pattern detected",
-                List.of()
+                true,
+                WEIGHT,
+                "Suspicious phone pattern detected",
+                evidence
         );
+    }
+
+    private String normalizePhone(String phone) {
+
+        return phone.replaceAll(
+                "[^0-9]",
+                ""
+        );
+    }
+
+    private boolean allDigitsSame(
+            String phone
+    ) {
+
+        if (phone.length() < 6) {
+            return false;
+        }
+
+        char first = phone.charAt(0);
+        for (char digit : phone.toCharArray()) {
+            if (digit != first) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isSequential(String phone) {

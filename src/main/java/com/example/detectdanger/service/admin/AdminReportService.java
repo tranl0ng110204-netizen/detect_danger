@@ -59,8 +59,9 @@ public class AdminReportService {
     private ReportResponse toResponse(Report report){
         return new ReportResponse(
                 report.getId(),
-                report.getReporterId(),
+                report.getReporter().getId(),
                 report.getInputType(),
+                report.getNormalizedValue(),
                 report.getStatus(),
                 report.getReason(),
                 null,
