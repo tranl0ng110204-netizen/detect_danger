@@ -7,6 +7,7 @@ import com.example.detectdanger.service.ScanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,12 @@ public class ScanController {
         return ResponseEntity.ok(
                 scanService.getHistoryScan(authentication)
         );
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ScanResponse> getScanById(@PathVariable Long id){
+        return ResponseEntity.ok(scanService.getScanById(id));
     }
 
 }

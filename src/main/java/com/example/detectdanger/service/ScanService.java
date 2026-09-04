@@ -20,7 +20,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,34 +44,59 @@ public class ScanService {
         //normalize input
         normalizeService.normalize(request.getInputType(),request.getContent());
 
-        boolean exists = scanRepository.existsByContent(request.getContent());
-        if(exists){
-            throw new IllegalArgumentException("ban da scan 1 ket qua tuong tu truoc do roi");
+        String currentEngineVersion = ruleEngine.getEngineVersion(request.getInputType());
+
+        Optional<Scan> existingScanCheck = scanRepository.findFirstByContentOrderByCreatedAtDesc(request.getContent());
+        if(existingScanCheck.isPresent()){
+            Scan existScan = existingScanCheck.get();
+
+            if(currentEngineVersion.equals(existScan.getRuleVersion())){
+                return toResponse(existScan);
+            }
+            return toResponse(reEvaluateExistScan(existScan,currentEngineVersion));
         }
-
-        //Check rule
-        List<RuleResult> results = ruleEngine.evaluate(request.getContent(),request.getInputType());
-
-        //risk score calculate
-        int riskScore = riskScoreCalculate.calculate(results);
-
-        //risk level calculate
-        RiskLevel riskLevel = riskLevelCalculator.riskLevelCalculate(riskScore);
-
-
         User user = userRepository.findByEmail(authentication.getName())
                     .orElseThrow();
-        Scan scan = Scan.builder()
+        Scan scan = performNewScan(request,user,currentEngineVersion);
+        return toResponse(scanRepository.save(scan));
+    }
+
+    @Transactional
+    public ScanResponse reScanById(Long scanId){
+        Scan scan = scanRepository.findById(scanId).orElseThrow(()-> new RuntimeException("Scan not found"));
+        String currentEngineVersion = ruleEngine.getEngineVersion(scan.getInputType());
+        Scan updated = reEvaluateExistScan(scan,currentEngineVersion);
+        return toResponse(updated);
+    }
+
+    private Scan reEvaluateExistScan(Scan scan, String currentEngineVersion){
+        List<RuleResult> results = ruleEngine.evaluate(scan.getContent(), scan.getInputType());
+        int riskScore = riskScoreCalculate.calculate(results);
+        RiskLevel riskLevel = riskLevelCalculator.riskLevelCalculate(riskScore);
+
+        scan.setRiskLevel(riskLevel);
+        scan.setRiskScore(riskScore);
+        scan.setEvidence(results.stream().map(RuleResult::reason).toList());
+        scan.setRuleVersion(currentEngineVersion);
+        scan.setUpdatedAt(LocalDateTime.now());
+
+        return scanRepository.save(scan);
+
+    }
+
+    private Scan performNewScan(ScanRequest request, User user, String engineVersion){
+        List<RuleResult> results = ruleEngine.evaluate(request.getContent(),request.getInputType());
+        int riskScore = riskScoreCalculate.calculate(results);
+        RiskLevel riskLevel = riskLevelCalculator.riskLevelCalculate(riskScore);
+        return Scan.builder()
                 .user(user)
                 .inputType(request.getInputType())
                 .content(request.getContent())
                 .riskScore(riskScore)
                 .riskLevel(riskLevel)
+                .ruleVersion(engineVersion)
                 .evidence(results.stream().map(RuleResult::reason).toList())
                 .build();
-
-        Scan saved = scanRepository.save(scan);
-        return toResponse(saved);
     }
 
     private ScanResponse toResponse(Scan saved) {
@@ -120,6 +147,17 @@ public class ScanService {
                 .totalPages(history.getTotalPages())
                 .last(history.isLast())
                 .build();
+    }
+
+    @Transactional
+    public ScanResponse getScanById(Long scanId){
+        Scan scan = scanRepository.findById(scanId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy kết quả scan với id: " + scanId));
+        String currentEngineVersion = ruleEngine.getEngineVersion(scan.getInputType());
+        if (scan.getRuleVersion() == null || !scan.getRuleVersion().equals(currentEngineVersion)) {
+            scan = reEvaluateExistScan(scan, currentEngineVersion);
+        }
+        return toResponse(scan);
     }
 
 

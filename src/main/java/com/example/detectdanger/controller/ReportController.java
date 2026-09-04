@@ -41,9 +41,8 @@ public class ReportController {
 
 
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/delete")
-    public void deleteReport(@Valid @RequestParam Long id){
+    @DeleteMapping("/delete/{id}")
+    public void deleteReport(@Valid @PathVariable Long id){
         reportService.cancelReport(id);
     }
-
 }

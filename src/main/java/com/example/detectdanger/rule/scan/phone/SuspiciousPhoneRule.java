@@ -11,7 +11,7 @@ import java.util.List;
 
 @Component
 public class SuspiciousPhoneRule implements DetectionRule {
-    private static final int WEIGHT = 20;
+    private static final int WEIGHT = 30;
 
     @Override
     public String getCode() {

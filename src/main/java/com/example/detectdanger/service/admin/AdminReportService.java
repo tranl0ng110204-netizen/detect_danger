@@ -1,9 +1,12 @@
 package com.example.detectdanger.service.admin;
 
+import com.example.detectdanger.dto.admin.AdminReportResponse;
 import com.example.detectdanger.dto.page.PageResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
+import com.example.detectdanger.entity.Enum.ReportStatus;
 import com.example.detectdanger.entity.Report;
 import com.example.detectdanger.repository.ReportRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,4 +72,30 @@ public class AdminReportService {
                 report.getUpdatedAt()
         );
     }
+
+    @Transactional
+    public ReportResponse reviewReportAgain(Long id, AdminReportResponse response){
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("report not found"));
+        if(report.getStatus() == ReportStatus.PENDING
+                || report.getStatus() == ReportStatus.REVIEWING){
+            throw new RuntimeException("only verified report can be check again");
+        }
+        report.setReason(response.getReason());
+        report.setStatus(ReportStatus.PENDING);
+        reportRepository.save(report);
+
+        return new ReportResponse(
+                report.getId(),
+                report.getReporter().getId(),
+                report.getInputType(),
+                report.getNormalizedValue(),
+                report.getStatus(),
+                report.getReason(),
+                null,
+                report.getCreatedAt(),
+                report.getUpdatedAt()
+        );
+    }
+
 }

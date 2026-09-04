@@ -46,11 +46,11 @@ public class ReportReviewEngine {
             int score
     ) {
 
-        if (score >= 40) {
+        if (score >= 50) {
             return ReviewRecommendation.ACCEPT_RECOMMEND;
         }
 
-        if (score <= -20) {
+        if (score < 0) {
             return ReviewRecommendation.REJECT_RECOMMEND;
         }
 

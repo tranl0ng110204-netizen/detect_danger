@@ -31,7 +31,6 @@ public class ReportService {
 
     @Transactional
     public ReportResponse createReport(ReportRequest request, Authentication authentication){
-
         // lay email user trong Jwt
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user not found"));
@@ -39,10 +38,11 @@ public class ReportService {
         String validatedInput = validationService.validate(request.inputType(),request.content());
         String normalizedInput = normalizeService.normalize(request.inputType(),request.content());
 
-        boolean exists = reportRepository.existsByNormalizedValue(normalizedInput);
-        if(exists){
-            throw new IllegalArgumentException("noi dung report da co trong danh sach report");
+        boolean alreadyReportByUser = reportRepository.existsByReporterIdAndNormalizedValue(user.getId(),normalizedInput);
+        if(alreadyReportByUser){
+            throw new IllegalArgumentException("Bạn đã gửi báo cáo cho nội dung này trước đó rồi. Đang chờ xử lý!");
         }
+
 
         ReporterStatus reporterStatus = reporterRiskService.evaluateUser(user);
         if(reporterStatus == ReporterStatus.RESTRICTED){
@@ -130,5 +130,4 @@ public class ReportService {
 
 
     }
-
 }

@@ -1,5 +1,7 @@
 package com.example.detectdanger.controller.admin;
 
+import com.example.detectdanger.dto.API_Response;
+import com.example.detectdanger.dto.admin.AdminReportResponse;
 import com.example.detectdanger.dto.admin.AdminUserResponse;
 import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.page.PageResponse;
@@ -9,6 +11,7 @@ import com.example.detectdanger.service.admin.AdminAuditService;
 import com.example.detectdanger.service.admin.AdminReportService;
 import com.example.detectdanger.service.admin.AdminScanService;
 import com.example.detectdanger.service.admin.AdminUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,6 +65,11 @@ public class AdminController {
         return ResponseEntity.ok(adminAuditService.getAudits(page,size));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/reports/{id}")
+    public ResponseEntity<ReportResponse> reviewReportAgain(@PathVariable Long id, @RequestBody AdminReportResponse response){
+        return ResponseEntity.ok(adminReportService.reviewReportAgain(id,response));
+    }
 
 
 }
