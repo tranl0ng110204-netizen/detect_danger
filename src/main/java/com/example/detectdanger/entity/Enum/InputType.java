@@ -4,5 +4,6 @@ public enum InputType {
     URL,
     PHONE,
     MESSAGE,
-    EMAIL
+    EMAIL,
+    FILE
 }

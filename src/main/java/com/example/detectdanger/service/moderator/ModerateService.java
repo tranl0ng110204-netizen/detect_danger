@@ -29,6 +29,7 @@ public class ModerateService {
     private final BlackListRepository blackListRepository;
     private final VerifyDataRepository verifyDataRepository;
     private final ReportReviewEngine reportReviewEngine;
+    private final ReporterReputationService reporterReputationService;
 
     @Transactional(readOnly = true)
     public List<ReportResponse> getCheckingReport(){
@@ -181,6 +182,11 @@ public class ModerateService {
         verifyDataRepository.save(verifiedData);
         verifyDataRepository.flush();
 
+        User reporter = userRepository.findById(savedReport.getReporter().getId())
+                .orElseThrow(()-> new RuntimeException("reporter not found"));
+        reporterReputationService.handleVerifyReport(reporter);
+
+
 
 
         //tao audit
@@ -224,6 +230,10 @@ public class ModerateService {
         //chuyen tu REVIEW -> REJECT
         selectReport.setStatus(ReportStatus.REJECTED);
         Report savedReport = reportRepository.save(selectReport);
+
+        User reporter = userRepository.findById(savedReport.getReporter().getId())
+                .orElseThrow(()-> new RuntimeException("reporter not found"));
+        reporterReputationService.handleRejected(reporter);
 
         //tao audit
         Audit audit = new Audit();
