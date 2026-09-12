@@ -2,13 +2,13 @@ package com.example.detectdanger.controller;
 
 import com.example.detectdanger.dto.API_Response;
 import com.example.detectdanger.dto.auth.LoginRequest;
-import com.example.detectdanger.dto.auth.LoginResponse;
 import com.example.detectdanger.dto.auth.RegisterRequest;
 import com.example.detectdanger.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,5 +36,4 @@ public class AuthController {
         }
 
     }
-
 }

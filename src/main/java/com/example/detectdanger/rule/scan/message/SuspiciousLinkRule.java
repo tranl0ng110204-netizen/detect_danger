@@ -6,33 +6,28 @@ import com.example.detectdanger.rule.scan.RuleResult;
 import com.example.detectdanger.rule.scan.RuleStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
-public class SensitiveInformationRule implements DetectionRule {
-    private static final int WEIGHT = 25;
+public class SuspiciousLinkRule implements DetectionRule {
+    private static final int WEIGHT = 15;
 
-    private static final List<String> SENSITIVE_KEYWORDS =
-            List.of(
-                    "otp",
-                    "mật khẩu",
-                    "password",
-                    "mã xác nhận",
-                    "mã bảo mật",
-                    "cvv",
-                    "số thẻ",
-                    "mã otp"
+    private static final Pattern URL_PATTERN =
+            Pattern.compile(
+                    "(?i)\\b((https?://)|(www\\.))[^\\s]+"
             );
 
     @Override
     public String getCode() {
-        return "SENSITIVE_INFORMATION_REQUEST";
+        return "SUSPICIOUS_LINK";
     }
 
     @Override
     public String getName() {
-        return "Sensitive Information Request Detection";
+        return "Suspicious Link Detection";
     }
 
     @Override
@@ -61,31 +56,48 @@ public class SensitiveInformationRule implements DetectionRule {
             InputType inputType
     ) {
 
-        String message = input.toLowerCase();
-
-        List<String> evidence =
-                SENSITIVE_KEYWORDS.stream()
-                        .filter(message::contains)
-                        .toList();
-
-        if (evidence.isEmpty()) {
+        if (input == null || input.isBlank()) {
 
             return new RuleResult(
                     getCode(),
                     false,
                     0,
-                    "No sensitive information request detected",
+                    "Message is empty",
                     List.of()
             );
         }
 
+        Matcher matcher =
+                URL_PATTERN.matcher(input);
+
+        List<String> urls =
+                new ArrayList<>();
+
+        while (matcher.find()) {
+
+            urls.add(
+                    matcher.group()
+            );
+        }
+
+        if (urls.isEmpty()) {
+
+            return new RuleResult(
+                    getCode(),
+                    false,
+                    0,
+                    "No URL detected in message",
+                    List.of()
+            );
+        }
         return new RuleResult(
                 getCode(),
                 true,
                 WEIGHT,
-                "Sensitive information request detected",
-                evidence
+                "URL detected inside message",
+                List.of(
+                        "Message contains one or more URLs"
+                )
         );
     }
-
 }

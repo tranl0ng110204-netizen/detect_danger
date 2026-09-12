@@ -19,8 +19,11 @@ public class UrlShortenerRule implements DetectionRule {
             "bit.ly",
             "tinyurl.com",
             "t.co",
+            "ow.ly",
             "is.gd",
-            "cutt.ly"
+            "buff.ly",
+            "cutt.ly",
+            "shorturl.at"
     );
     @Override
     public String getCode() {
@@ -39,52 +42,46 @@ public class UrlShortenerRule implements DetectionRule {
 
 
     @Override
-    public RuleStatus getStatus() {
-        return RuleStatus.ACTIVE;
-    }
-
-    @Override
-    public String getVersion() {
-        return "1.0";
-    }
-
-    @Override
-    public boolean supports(InputType inputType) {
+    public boolean supports(InputType inputType){
         return inputType == InputType.URL;
     }
 
     @Override
-    public RuleResult evaluate(String input,InputType inputType) {
-        try {
+    public RuleStatus getStatus(){
+        return RuleStatus.ACTIVE;
+    }
 
-            URI uri = new URI(input);
+    @Override
+    public String getVersion(){
+        return "1.1";
+    }
 
-            String host = uri.getHost();
-
-            if (host != null &&
-                    SHORTENER_DOMAINS.contains(
-                            host.toLowerCase()
-                    )) {
-
-                return new RuleResult(
-                        getCode(),
-                        true,
-                        WEIGHT,
-                        "URL shortener detected",
-                        List.of(host)
-                );
-            }
-
-        } catch (URISyntaxException ignored) {
+    @Override
+    public RuleResult evaluate(String input,InputType inputType){
+        if(supports(inputType)){
+            return new RuleResult(
+                    getCode(),
+                    true,
+                    WEIGHT,
+                    getName(),
+                    List.of(getName())
+            );
         }
-
         return new RuleResult(
                 getCode(),
-                false,
+                true,
                 0,
-                "No URL shortener detected",
+                null,
                 List.of()
         );
+
+
+
+
     }
+
+
+
+
 
 }

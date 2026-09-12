@@ -79,6 +79,7 @@ public class AuthService {
 
         return new LoginResponse(
                 token,
+                userDetails.getReputationScore(),
                 "Bearer"
         );
     }

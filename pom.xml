@@ -105,6 +105,12 @@
             <version>8.15.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

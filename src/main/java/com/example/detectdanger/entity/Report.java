@@ -27,8 +27,9 @@ public class Report {
     @Column(nullable = false, length = 500)
     private String normalizedValue;
 
-    @Column(nullable = false)
-    private Long reporterId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporterId",nullable = false)
+    private User reporter;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -8,6 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class LoginResponse {
     private String accessToken;
+    private int reputationScore;
     private String tokenType;
 
 }

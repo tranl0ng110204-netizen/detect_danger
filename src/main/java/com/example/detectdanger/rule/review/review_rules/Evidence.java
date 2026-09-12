@@ -29,25 +29,15 @@ public class Evidence implements ReportReviewRule {
     ) {
 
         Report report = context.getReport();
+        String description = report.getReason();
 
-        String description =
-                report.getNormalizedValue();
-
-        if (description == null
-                || description.isBlank()) {
-
+        if (description == null || description.isBlank()) {
             return ReviewResult.builder()
                     .ruleCode(getCode())
                     .matched(false)
                     .score(-15)
-                    .reason(
-                            "Report has no description"
-                    )
-                    .evidence(
-                            List.of(
-                                    "No description provided"
-                            )
-                    )
+                    .reason("Report has no description")
+                    .evidence(List.of("No description provided"))
                     .build();
         }
 
@@ -55,14 +45,8 @@ public class Evidence implements ReportReviewRule {
                 .ruleCode(getCode())
                 .matched(true)
                 .score(25)
-                .reason(
-                        "Report contains supporting information"
-                )
-                .evidence(
-                        List.of(
-                                "Description provided"
-                        )
-                )
+                .reason("Report contains supporting information")
+                .evidence(List.of("Description provided"))
                 .build();
     }
 

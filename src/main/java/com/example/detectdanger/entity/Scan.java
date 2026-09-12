@@ -39,7 +39,12 @@ public class Scan {
     private RiskLevel riskLevel;
 
     @Column(nullable = false)
+    private String ruleVersion;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     @Column(nullable = false)
     private List<String> evidence;
@@ -47,5 +52,11 @@ public class Scan {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

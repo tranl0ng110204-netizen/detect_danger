@@ -20,7 +20,7 @@ public class ReportReviewEngine {
                 .toList();
     }
 
-    public ReportReviewResult review(
+    public ReportCheckingResult review(
             ReportReviewContext context
     ) {
 
@@ -35,7 +35,7 @@ public class ReportReviewEngine {
         ReviewRecommendation recommendation =
                 determineRecommendation(totalScore);
 
-        return ReportReviewResult.builder()
+        return ReportCheckingResult.builder()
                 .totalScore(totalScore)
                 .recommendation(recommendation)
                 .ruleResults(results)
@@ -46,11 +46,11 @@ public class ReportReviewEngine {
             int score
     ) {
 
-        if (score >= 40) {
+        if (score >= 50) {
             return ReviewRecommendation.ACCEPT_RECOMMEND;
         }
 
-        if (score <= -20) {
+        if (score < 0) {
             return ReviewRecommendation.REJECT_RECOMMEND;
         }
 

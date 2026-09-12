@@ -39,7 +39,7 @@ public class ModerationController {
 
     @GetMapping("/reports/{id}")
     @PreAuthorize("hasRole('MODERATOR')")
-    public ResponseEntity<Report> getReportDetail(@PathVariable Long id){
+    public ResponseEntity<ReportResponse> getReportDetail(@PathVariable Long id){
         try{
             return ResponseEntity.ok(moderateService.getReportDetail(id));
         } catch (RuntimeException e) {
@@ -67,7 +67,7 @@ public class ModerationController {
     @PatchMapping("/reports/{id}/reject")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ReportResponse> rejectReport(@PathVariable Long id,
-                                                       @Valid @RequestBody ModeratorDecisionResponse response,
+                                                        @Valid @RequestBody ModeratorDecisionResponse response,
                                                        Authentication authentication){
         ReportResponse rejectResponse = moderateService.rejectReport(id,response,authentication);
         return ResponseEntity.ok(rejectResponse);

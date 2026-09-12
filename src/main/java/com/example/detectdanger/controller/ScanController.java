@@ -7,9 +7,11 @@ import com.example.detectdanger.service.ScanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 
 @RestController
@@ -27,12 +29,24 @@ public class ScanController {
         );
     }
 
-    @RateLimit(capacity = 5, durationHours = 1)
+    @RateLimit(capacity = 20, durationHours = 1)
     @GetMapping("/history")
     public ResponseEntity<List<ScanResponse>> getScanHistory(Authentication authentication){
         return ResponseEntity.ok(
                 scanService.getHistoryScan(authentication)
         );
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ScanResponse> getScanById(@PathVariable Long id){
+        return ResponseEntity.ok(scanService.getScanById(id));
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/scan-pdf")
+    public ResponseEntity<ScanResponse> createScanFilePdf(File file, Authentication authentication){
+        return ResponseEntity.ok(scanService.scanFilePdf(file,authentication));
     }
 
 }
