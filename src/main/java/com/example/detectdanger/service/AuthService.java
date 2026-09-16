@@ -8,6 +8,8 @@ import com.example.detectdanger.entity.Enum.UserStatus;
 import com.example.detectdanger.entity.User;
 import com.example.detectdanger.repository.UserRepository;
 import com.example.detectdanger.security.JwtService;
+import com.example.detectdanger.exceptions.BusinessException;
+import com.example.detectdanger.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,14 +28,10 @@ public class AuthService {
     //dang ki user
     public void register(RegisterRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new IllegalArgumentException(
-                    "Email already exists"
-            );
+            throw new BusinessException("Email already exists");
         }
         if(userRepository.existsByUsername(request.getUserName())){
-            throw new IllegalArgumentException(
-                    "User already exists"
-            );
+            throw new BusinessException("User already exists");
         }
         User user = User.builder()
                 .username(request.getUserName())
@@ -59,11 +57,10 @@ public class AuthService {
         );
 
         var userDetails = userRepository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + request.getEmail()));
 
-        boolean isDelete = userDetails.isDelete();
-        if(isDelete){
-            throw  new RuntimeException("tai khoan da bi dinh chi vo thoi han");
+        if(userDetails.isDelete() || userDetails.getUserStatus() == UserStatus.SUSPENDED){
+            throw new BusinessException("Tài khoản đã bị đình chỉ hoặc khóa");
         }
 
 

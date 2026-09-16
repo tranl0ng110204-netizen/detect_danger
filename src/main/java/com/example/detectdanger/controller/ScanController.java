@@ -11,7 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 @RestController
@@ -37,16 +38,17 @@ public class ScanController {
         );
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'MODERATOR')")
     @GetMapping("/{id}")
-    public ResponseEntity<ScanResponse> getScanById(@PathVariable Long id){
-        return ResponseEntity.ok(scanService.getScanById(id));
+    public ResponseEntity<ScanResponse> getScanById(@PathVariable Long id, Authentication authentication){
+        return ResponseEntity.ok(scanService.getScanById(id, authentication));
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PostMapping("/scan-pdf")
-    public ResponseEntity<ScanResponse> createScanFilePdf(File file, Authentication authentication){
-        return ResponseEntity.ok(scanService.scanFilePdf(file,authentication));
+    @RateLimit(capacity = 10, durationHours = 1)
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'MODERATOR')")
+    @PostMapping(value = "/scan-pdf", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ScanResponse> createScanFilePdf(@RequestParam("file") MultipartFile file, Authentication authentication){
+        return ResponseEntity.ok(scanService.scanFilePdf(file, authentication));
     }
 
 }

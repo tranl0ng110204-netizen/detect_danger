@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -13,13 +14,16 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    private static final String SECRET =
-            "detect-danger-secret-key-detect-danger-secret-key";
+    private final SecretKey key;
+    private final long expiration;
 
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
-
-    private final long expiration = 1000 * 60 * 60; // 1 hour
+    public JwtService(
+            @Value("${jwt.secret:detect-danger-secret-key-detect-danger-secret-key-256bit}") String secret,
+            @Value("${jwt.expiration:3600000}") long expiration
+    ) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
+    }
 
     public String generateToken(UserDetails userDetails) {
 

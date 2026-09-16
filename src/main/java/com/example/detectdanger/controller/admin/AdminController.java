@@ -1,21 +1,21 @@
 package com.example.detectdanger.controller.admin;
 
 import com.example.detectdanger.dto.API_Response;
+import com.example.detectdanger.dto.Rule.RuleResponse;
 import com.example.detectdanger.dto.admin.AdminReportResponse;
 import com.example.detectdanger.dto.admin.AdminUserResponse;
 import com.example.detectdanger.dto.audit.AuditResponse;
 import com.example.detectdanger.dto.page.PageResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
 import com.example.detectdanger.dto.scan.ScanResponse;
-import com.example.detectdanger.service.admin.AdminAuditService;
-import com.example.detectdanger.service.admin.AdminReportService;
-import com.example.detectdanger.service.admin.AdminScanService;
-import com.example.detectdanger.service.admin.AdminUserService;
+import com.example.detectdanger.service.admin.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -25,6 +25,7 @@ public class AdminController {
     private final AdminScanService adminScanService;
     private final AdminReportService adminReportService;
     private final AdminAuditService adminAuditService;
+    private final AdminRuleService adminRuleService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
@@ -69,6 +70,13 @@ public class AdminController {
     @PatchMapping("/reports/{id}")
     public ResponseEntity<ReportResponse> reviewReportAgain(@PathVariable Long id, @RequestBody AdminReportResponse response){
         return ResponseEntity.ok(adminReportService.reviewReportAgain(id,response));
+    }
+
+    //==============RULE===============
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rules/all")
+    public ResponseEntity<List<RuleResponse>> getAllRules(){
+        return ResponseEntity.ok(adminRuleService.getAllRules());
     }
 
 

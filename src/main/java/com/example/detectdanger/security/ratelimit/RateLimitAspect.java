@@ -1,8 +1,6 @@
 package com.example.detectdanger.security.ratelimit;
 
-import com.example.detectdanger.entity.User;
 import com.example.detectdanger.exceptions.TooManyRequestsException;
-import com.example.detectdanger.repository.UserRepository;
 import com.example.detectdanger.service.RateLimitService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @RequiredArgsConstructor
 public class RateLimitAspect {
     private final RateLimitService rateLimitService;
-    private final UserRepository userRepository;
 
     @Around("@annotation(rateLimit)")
     public Object checkRateLimit(
@@ -34,18 +31,13 @@ public class RateLimitAspect {
                         .getAuthentication();
 
         if (authentication == null
-                || !authentication.isAuthenticated()) {
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
 
             return joinPoint.proceed();
         }
 
         String email = authentication.getName();
-
-        User user = userRepository
-                .findByEmail(email)
-                .orElseThrow();
-
-        Long userId = user.getId();
 
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes)
@@ -61,7 +53,7 @@ public class RateLimitAspect {
 
         String key =
                 "user:"
-                        + userId
+                        + email
                         + ":"
                         + request.getMethod()
                         + ":"
