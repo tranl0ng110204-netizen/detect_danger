@@ -2,29 +2,28 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Copy Maven wrapper và file cấu hình
-COPY .mvn ./.mvn
-COPY mvnw mvnw.cmd ./
-COPY pom.xml ./
+# Copy maven wrapper + pom trước để tận dụng cache layer
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
 
-# Copy source code
+# Copy source và build
 COPY src ./src
-
-# Cấp quyền thực thi cho wrapper (cần trên Linux/macOS)
-RUN chmod +x mvnw
-
-# Build ứng dụng (bỏ qua test để nhanh)
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -B clean package -DskipTests
 
 # ---------- STAGE 2: RUNTIME ----------
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy file JAR từ stage build
+# Tạo user non-root (bảo mật, Render khuyến nghị)
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
 COPY --from=build /app/target/*.jar app.jar
 
-# Mở cổng 7000 (khớp với server.port)
+# Render cấp PORT động → đọc từ biến môi trường, fallback 7000
+ENV SERVER_PORT=7000
 EXPOSE 7000
 
-# Lệnh khởi chạy
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Dùng shell form để expand $PORT nếu cần
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-7000} -jar /app/app.jar"]
