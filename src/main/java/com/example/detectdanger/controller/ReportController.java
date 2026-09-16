@@ -32,17 +32,16 @@ public class ReportController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'MODERATOR')")
     @GetMapping("/detail/{id}")
-    public ReportResponse getReportDetail(@Valid @PathVariable Long id){
-        return reportService.getReportDetail(id);
+    public ResponseEntity<ReportResponse> getReportDetail(@PathVariable Long id, Authentication authentication){
+        return ResponseEntity.ok(reportService.getReportDetail(id, authentication));
     }
 
-
-
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("/delete/{id}")
-    public void deleteReport(@Valid @PathVariable Long id){
-        reportService.cancelReport(id);
+    public ResponseEntity<Void> deleteReport(@PathVariable Long id, Authentication authentication){
+        reportService.cancelReport(id, authentication);
+        return ResponseEntity.noContent().build();
     }
 }

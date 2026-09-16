@@ -13,14 +13,19 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.example.detectdanger.entity.Enum.UserStatus;
+import com.example.detectdanger.exceptions.ResourceNotFoundException;
+
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
     private final UserRepository userRepository;
 
     public void deleteUser(Long userId){
-        User user = userRepository.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.setDelete(true);
+        user.setUserStatus(UserStatus.SUSPENDED);
         userRepository.save(user);
     }
 

@@ -5,20 +5,16 @@ import com.example.detectdanger.dto.moderator.ModeratorDecisionResponse;
 import com.example.detectdanger.dto.report.ReportResponse;
 import com.example.detectdanger.entity.Report;
 import com.example.detectdanger.service.moderator.ModerateService;
-import com.example.detectdanger.entity.ReportStatus;
-import com.example.detectdanger.repository.ReportRepository;
-import com.example.detectdanger.service.ModerateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+
+import com.example.detectdanger.dto.moderator.ModeratorDecisionRequest;
 
 @RestController
 @RequestMapping("/api/moderator")
@@ -29,47 +25,37 @@ public class ModerationController {
     @GetMapping("/reports/checking")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<List<ReportResponse>> getCheckingReports(){
-        try{
-            return ResponseEntity.ok(moderateService.getCheckingReport());
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-
+        return ResponseEntity.ok(moderateService.getCheckingReport());
     }
 
     @GetMapping("/reports/{id}")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ReportResponse> getReportDetail(@PathVariable Long id){
-        try{
-            return ResponseEntity.ok(moderateService.getReportDetail(id));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-
+        return ResponseEntity.ok(moderateService.getReportDetail(id));
     }
 
     @PatchMapping("/reports/{id}/review")
     @PreAuthorize("hasRole('MODERATOR')")
-    public ResponseEntity<ReportResponse> checkReport(@PathVariable Long id,Authentication authentication) {
-        ReportResponse response = moderateService.checkReport(id,authentication);
+    public ResponseEntity<ReportResponse> checkReport(@PathVariable Long id, Authentication authentication) {
+        ReportResponse response = moderateService.checkReport(id, authentication);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/reports/{id}/verify")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ReportResponse> verifyReport(@PathVariable Long id,
-                                                       @Valid @RequestBody ModeratorDecisionResponse response,
+                                                       @Valid @RequestBody ModeratorDecisionRequest request,
                                                        Authentication authentication){
-        ReportResponse verifyResponse = moderateService.verifyReport(id,response,authentication);
+        ReportResponse verifyResponse = moderateService.verifyReport(id, request, authentication);
         return ResponseEntity.ok(verifyResponse);
     }
 
     @PatchMapping("/reports/{id}/reject")
     @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ReportResponse> rejectReport(@PathVariable Long id,
-                                                        @Valid @RequestBody ModeratorDecisionResponse response,
+                                                       @Valid @RequestBody ModeratorDecisionRequest request,
                                                        Authentication authentication){
-        ReportResponse rejectResponse = moderateService.rejectReport(id,response,authentication);
+        ReportResponse rejectResponse = moderateService.rejectReport(id, request, authentication);
         return ResponseEntity.ok(rejectResponse);
     }
 

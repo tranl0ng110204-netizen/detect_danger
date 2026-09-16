@@ -11,4 +11,6 @@ public interface RuleRepository extends JpaRepository<Rule,Long> {
     List<Rule> findByInputTypeAndRuleStatus(InputType inputType, RuleStatus ruleStatus);
 
     boolean existsByRuleCode(String ruleCode);
+
+    List<Rule> findAll();
 }

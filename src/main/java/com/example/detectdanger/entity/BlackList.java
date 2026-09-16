@@ -59,6 +59,7 @@ public class BlackList {
     @Column(
             nullable = false
     )
+    @Builder.Default
     private boolean active = true;
 
     @Column(

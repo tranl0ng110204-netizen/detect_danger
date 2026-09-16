@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 
+import com.example.detectdanger.dto.moderator.ModeratorDecisionRequest;
+import com.example.detectdanger.exceptions.BusinessException;
+import com.example.detectdanger.exceptions.ResourceNotFoundException;
+
 @Service
 @RequiredArgsConstructor
 public class ModerateService {
@@ -51,7 +55,8 @@ public class ModerateService {
 
 
     private ReportReviewContext createContext(Report report){
-        User reporter = userRepository.findById(report.getReporter().getId()).orElseThrow(()-> new RuntimeException("user not found"));
+        User reporter = userRepository.findById(report.getReporter().getId())
+                .orElseThrow(()-> new ResourceNotFoundException("Reporter user not found"));
         return new ReportReviewContext(
                 report,
                 reporter,
@@ -69,19 +74,24 @@ public class ModerateService {
 
     @Transactional
     public ReportResponse getReportDetail(Long id){
-        Report saved = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
-        //tạo report review result
-        ReportReviewContext context = createContext(saved);
-        ReportCheckingResult reportCheckingResult = reportReviewEngine.review(context);
-        List<String> rulesChecking = reportCheckingResult.getRuleResults().stream().map(
-                        ReviewResult::getReason
-                )
-                .toList();
-        ReportReviewResult reportReviewResult = ReportReviewResult.builder()
-                .totalScore(reportCheckingResult.getTotalScore())
-                .recommendation(reportCheckingResult.getRecommendation())
-                .ruleResult(rulesChecking)
-                .build();
+        Report saved = reportRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Report not found with id: " + id));
+
+        ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
+        if (reportReviewResult == null) {
+            ReportReviewContext context = createContext(saved);
+            ReportCheckingResult reportCheckingResult = reportReviewEngine.review(context);
+            List<String> rulesChecking = reportCheckingResult.getRuleResults().stream()
+                    .map(ReviewResult::getReason)
+                    .toList();
+            reportReviewResult = ReportReviewResult.builder()
+                    .report(saved)
+                    .totalScore(reportCheckingResult.getTotalScore())
+                    .recommendation(reportCheckingResult.getRecommendation())
+                    .ruleResult(rulesChecking)
+                    .build();
+            reportReviewResult = reportReviewResultRepository.save(reportReviewResult);
+        }
 
         return new ReportResponse(
                 saved.getId(),
@@ -94,44 +104,44 @@ public class ModerateService {
                 saved.getCreatedAt(),
                 saved.getUpdatedAt()
         );
-
-
     }
 
     @Transactional
-    public ReportResponse checkReport(Long id,Authentication authentication){
-        //tim report
-        Report selectedReport = reportRepository.findById(id).orElseThrow(()-> new RuntimeException("report not found"));
+    public ReportResponse checkReport(Long id, Authentication authentication){
+        Report selectedReport = reportRepository.findById(id)
+                .orElseThrow(()-> new ResourceNotFoundException("Report not found with id: " + id));
 
-        //check report co dang o trang thai PENDING Khong
         if(selectedReport.getStatus() != ReportStatus.PENDING){
-            throw new RuntimeException("only Pending reports appear");
+            throw new BusinessException("Chỉ có thể chuyển báo cáo PENDING sang REVIEWING");
         }
 
-        //goi user Moderator
         User moderator = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(()-> new RuntimeException("user not found"));
+                .orElseThrow(()-> new ResourceNotFoundException("Moderator not found: " + authentication.getName()));
 
-        //chuyen PENDING-> REVIEWIMG
         selectedReport.setStatus(ReportStatus.REVIEWING);
         Report saved = reportRepository.save(selectedReport);
 
-
-        //tạo report review result
         ReportReviewContext context = createContext(saved);
         ReportCheckingResult reportCheckingResult = reportReviewEngine.review(context);
-        List<String> rulesChecking = reportCheckingResult.getRuleResults().stream().map(
-                        ReviewResult::getReason
-        )
+        List<String> rulesChecking = reportCheckingResult.getRuleResults().stream()
+                .map(ReviewResult::getReason)
                 .toList();
-        ReportReviewResult reportReviewResult = ReportReviewResult.builder()
-                .totalScore(reportCheckingResult.getTotalScore())
-                .recommendation(reportCheckingResult.getRecommendation())
-                .ruleResult(rulesChecking)
-                .build();
 
+        ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
+        if (reportReviewResult == null) {
+            reportReviewResult = ReportReviewResult.builder()
+                    .report(saved)
+                    .totalScore(reportCheckingResult.getTotalScore())
+                    .recommendation(reportCheckingResult.getRecommendation())
+                    .ruleResult(rulesChecking)
+                    .build();
+        } else {
+            reportReviewResult.setTotalScore(reportCheckingResult.getTotalScore());
+            reportReviewResult.setRecommendation(reportCheckingResult.getRecommendation());
+            reportReviewResult.setRuleResult(rulesChecking);
+        }
+        reportReviewResult = reportReviewResultRepository.save(reportReviewResult);
 
-        //tao Audit
         Audit audit = new Audit();
         audit.setReportId(id);
         audit.setModeratorId(moderator.getId());
@@ -139,7 +149,6 @@ public class ModerateService {
         audit.setReason("Start review the report by moderator");
         auditRepository.save(audit);
 
-        //tra ve report response
         return new ReportResponse(
                 saved.getId(),
                 saved.getReporter().getId(),
@@ -154,26 +163,22 @@ public class ModerateService {
     }
 
     @Transactional
-    public ReportResponse verifyReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
-        //tim report
-        Report selectReport = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+    public ReportResponse verifyReport(Long id, ModeratorDecisionRequest request, Authentication authentication){
+        Report selectReport = reportRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Report not found with id: " + id));
         ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
 
-        //check report co trong trang thai REVIEWING khong?
         if(selectReport.getStatus() != ReportStatus.REVIEWING){
-            throw new RuntimeException("only reviewing ports are appear");
+            throw new BusinessException("Chỉ có thể verify báo cáo đang trong trạng thái REVIEWING");
         }
 
-        //lay thong tin Moderator
         String email = authentication.getName();
-        User moderator = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("user khong duoc verify"));
+        User moderator = userRepository.findByEmail(email)
+                .orElseThrow(()->new ResourceNotFoundException("Moderator not found: " + email));
 
-        //chuyen sang REVIEWING -> VERIFY
         selectReport.setStatus(ReportStatus.VERIFIED);
         Report savedReport = reportRepository.save(selectReport);
 
-
-        //tao VerifyData
         VerifiedData verifiedData = new VerifiedData();
         verifiedData.setInputType(savedReport.getInputType());
         verifiedData.setNormalizedValue(savedReport.getNormalizedValue());
@@ -183,20 +188,15 @@ public class ModerateService {
         verifyDataRepository.flush();
 
         User reporter = userRepository.findById(savedReport.getReporter().getId())
-                .orElseThrow(()-> new RuntimeException("reporter not found"));
+                .orElseThrow(()-> new ResourceNotFoundException("Reporter not found"));
         reporterReputationService.handleVerifyReport(reporter);
 
-
-
-
-        //tao audit
         Audit audit = new Audit();
         audit.setReportId(savedReport.getId());
         audit.setModeratorId(moderator.getId());
         audit.setAuditAction(AuditAction.VERIFY);
-        audit.setReason(response.reason());
+        audit.setReason(request.reason());
         auditRepository.save(audit);
-
 
         return new ReportResponse(
                 savedReport.getId(),
@@ -209,41 +209,40 @@ public class ModerateService {
                 savedReport.getCreatedAt(),
                 savedReport.getUpdatedAt()
         );
-
-   }
+    }
 
     @Transactional
-    public ReportResponse rejectReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
-        //tim report, report result theo id của report
-        Report selectReport = reportRepository.findById(id).orElseThrow(()->new RuntimeException("report not found"));
+    public ReportResponse verifyReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
+        return verifyReport(id, new ModeratorDecisionRequest(response.reason()), authentication);
+    }
+
+    @Transactional
+    public ReportResponse rejectReport(Long id, ModeratorDecisionRequest request, Authentication authentication){
+        Report selectReport = reportRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Report not found with id: " + id));
         ReportReviewResult reportReviewResult = reportReviewResultRepository.findByReportId(id);
 
-        //check report co trong trang thai REVIEWING khong?
         if(selectReport.getStatus() != ReportStatus.REVIEWING){
-            throw new RuntimeException("only reviewing ports are appear");
+            throw new BusinessException("Chỉ có thể reject báo cáo đang trong trạng thái REVIEWING");
         }
 
-        //lay thong tin Moderator
         String email = authentication.getName();
-        User moderator = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("user not found"));
+        User moderator = userRepository.findByEmail(email)
+                .orElseThrow(()->new ResourceNotFoundException("Moderator not found: " + email));
 
-        //chuyen tu REVIEW -> REJECT
         selectReport.setStatus(ReportStatus.REJECTED);
         Report savedReport = reportRepository.save(selectReport);
 
         User reporter = userRepository.findById(savedReport.getReporter().getId())
-                .orElseThrow(()-> new RuntimeException("reporter not found"));
+                .orElseThrow(()-> new ResourceNotFoundException("Reporter not found"));
         reporterReputationService.handleRejected(reporter);
 
-        //tao audit
         Audit audit = new Audit();
         audit.setReportId(savedReport.getId());
         audit.setModeratorId(moderator.getId());
         audit.setAuditAction(AuditAction.REJECT);
-        audit.setReason(response.reason());
-
+        audit.setReason(request.reason());
         auditRepository.save(audit);
-
 
         return new ReportResponse(
                 savedReport.getId(),
@@ -256,7 +255,11 @@ public class ModerateService {
                 savedReport.getCreatedAt(),
                 savedReport.getUpdatedAt()
         );
+    }
 
+    @Transactional
+    public ReportResponse rejectReport(Long id, ModeratorDecisionResponse response, Authentication authentication){
+        return rejectReport(id, new ModeratorDecisionRequest(response.reason()), authentication);
     }
 
     @Transactional(readOnly = true)

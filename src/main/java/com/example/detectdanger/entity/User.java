@@ -53,6 +53,7 @@ public class User {
     private Integer verifiedReports = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isDelete = false;
 
     @Column(nullable = false)

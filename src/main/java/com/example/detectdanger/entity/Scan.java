@@ -9,7 +9,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "scan")
+@Table(name = "scan", indexes = {
+        @Index(name = "idx_scan_user_created", columnList = "user_id, createdAt"),
+        @Index(name = "idx_scan_created", columnList = "createdAt")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,7 +31,7 @@ public class Scan {
     @Enumerated(EnumType.STRING)
     private InputType inputType;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
@@ -46,7 +49,6 @@ public class Scan {
 
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
     private List<String> evidence;
 
     @PrePersist
