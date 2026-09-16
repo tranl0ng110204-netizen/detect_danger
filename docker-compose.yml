@@ -32,6 +32,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SERVER_PORT: 7000
+      JWT_SECRET: ${JWT_SECRET:-detect-danger-secret-key-detect-danger-secret-key-256bit}
+      PRING_JPA_SHOW_SQL: "false"
       # SPRING_JPA_SHOW_SQL: true   # có thể bật nếu muốn
     depends_on:
       postgres-db:
