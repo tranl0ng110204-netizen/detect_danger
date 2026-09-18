@@ -90,7 +90,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "https://detect-danger-front.vercel.app",  // Domain frontend trên Vercel
+                "https://detect-danger.vercel.app",  // Domain frontend trên Vercel
                 "http://localhost:5173"            // Cho môi trường dev
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
